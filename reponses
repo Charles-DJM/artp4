@@ -1,0 +1,7 @@
+test de perfs 1
+
+quand le process stress1 termine, le serveur est encore entrain d'afficher les fermetures de connexions
+plus n est grand, plus ce temps est long
+
+quand stress1 ferme les connexions instantanément, ce temps est plus court.
+

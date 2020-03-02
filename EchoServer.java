@@ -18,10 +18,6 @@ class EchoServer {
       ssocket = new ServerSocket(port);
       ssocket.setReuseAddress(true); /* rend le port réutilisable rapidement */
 
-      /*Threads*/
-      //final Executor executor;
-     // executor = Executors.newFixedThreadPool(50);
-
       FileExport fileExport = new FileExport();
 
       while (true) {
@@ -90,7 +86,7 @@ class EchoServer {
           if (tampon != null) {
             compteur++;
             /* log */
-            //System.err.println("[" + hote + ":" + port + "]: " + compteur + ":" + tampon);
+            System.err.println("[" + hote + ":" + port + "]: " + compteur + ":" + tampon);
             /* echo vers le client */
             out.println("> " + tampon);
 
@@ -107,7 +103,7 @@ class EchoServer {
         out.close();
         socket.close();
 
-       // System.err.println("[" + hote + ":" + port + "]: Terminé...");
+        System.err.println("[" + hote + ":" + port + "]: Terminé...");
       } catch (Exception e) {
         e.printStackTrace();
       }
@@ -123,7 +119,6 @@ class EchoServer {
         file = new File("serverResponseTime.csv");
         file.createNewFile();
       } catch (IOException e) {
-        System.out.println("Error : Unable to create serverResponseTime.csv");
         e.printStackTrace();
       }
     }
@@ -131,7 +126,7 @@ class EchoServer {
     void write(long time, char n) {
       try {
         FileWriter writer = new FileWriter(file, true);
-        System.out.println("n = " + n + " time = " + time);
+
         String string;
         StringBuilder stringBuilder = new StringBuilder();
         stringBuilder.append(n);
@@ -139,9 +134,8 @@ class EchoServer {
         stringBuilder.append(time);
         stringBuilder.append('\n');
         string = stringBuilder.toString();
-        writer.write(string);
 
-        System.out.print(string);
+        writer.write(string);
         writer.close();
       } catch (IOException e) {
         e.printStackTrace();

@@ -7,10 +7,10 @@ import java.net.*;
 import java.util.concurrent.*;
 import java.io.*;
 
-class EchoServer {
+class EchoServerDPool {
 
   /* Démarrage et délégation des connexions entrantes */
-   void demarrer(int port) {
+   void demarrer(int port, Executor executor) {
     ServerSocket ssocket; // socket d'écoute utilisée par le serveur
 
     System.out.println("Lancement du serveur sur le port " + port);
@@ -21,9 +21,10 @@ class EchoServer {
       FileExport fileExport = new FileExport();
 
       while (true) {
-	    (new Handler(ssocket.accept(), fileExport)).start();
+        executor.execute(new Handler(ssocket.accept(), fileExport));
       }
     } catch (IOException ex) {
+      ex.printStackTrace();
       System.out.println("Arrêt anormal du serveur.");
       return;
     }
@@ -31,18 +32,30 @@ class EchoServer {
 
   public static void main(String[] args) {
     int argc = args.length;
-    EchoServer serveur;
+    EchoServerDPool serveur;
+    Executor executor;
 
     /* Traitement des arguments */
     if (argc == 1) {
+     // executor = Executors.newWorkStealingPool();
+      executor = Executors.newCachedThreadPool();
       try {
-        serveur = new EchoServer();
-        serveur.demarrer(Integer.parseInt(args[0]));
+        serveur = new EchoServerDPool();
+        serveur.demarrer(Integer.parseInt(args[0]), executor);
+      } catch (Exception e) {
+        e.printStackTrace();
+      }
+
+    }else if(argc == 2){
+      executor = Executors.newFixedThreadPool(Integer.parseInt(args[0]));
+      try {
+        serveur = new EchoServerDPool();
+        serveur.demarrer(Integer.parseInt(args[1]), executor);
       } catch (Exception e) {
         e.printStackTrace();
       }
     } else {
-      System.out.println("Usage: java EchoServer port");
+      System.out.println("Usage: java EchoServer [-t nb] port");
     }
     return;
   }
@@ -52,7 +65,7 @@ class EchoServer {
      NB classe Runnable : le code exécuté est défini dans la
      méthode run().
   */
-  class Handler extends Thread {
+  class Handler implements Runnable {
 
     Socket socket;
     PrintWriter out;
@@ -91,7 +104,7 @@ class EchoServer {
             out.println("> " + tampon);
 
             responseTime = System.nanoTime() - responseTime;
-            fileExport.write(responseTime, tampon.charAt(tampon.length()-1));
+            fileExport.write(responseTime);
           } else {
             break;
           }
@@ -123,18 +136,15 @@ class EchoServer {
       }
     }
 
-    void write(long time, char n) {
+    void write(long time) {
       try {
         FileWriter writer = new FileWriter(file, true);
 
         String string;
         StringBuilder stringBuilder = new StringBuilder();
-        stringBuilder.append(n);
-        stringBuilder.append(';');
         stringBuilder.append(time);
         stringBuilder.append('\n');
         string = stringBuilder.toString();
-
         writer.write(string);
         writer.close();
       } catch (IOException e) {

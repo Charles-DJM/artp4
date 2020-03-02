@@ -22,8 +22,10 @@ class EchoServer {
       //final Executor executor;
      // executor = Executors.newFixedThreadPool(50);
 
+      FileExport fileExport = new FileExport();
+
       while (true) {
-	    (new Handler(ssocket.accept())).start();
+	    (new Handler(ssocket.accept(), fileExport)).start();
       }
     } catch (IOException ex) {
       System.out.println("Arrêt anormal du serveur.");
@@ -61,13 +63,16 @@ class EchoServer {
     BufferedReader in;
     InetAddress hote;
     int port;
+    long responseTime;
+    FileExport fileExport;
 
-    Handler(Socket socket) throws IOException {
+    Handler(Socket socket, FileExport fileExport) throws IOException {
       this.socket = socket;
       out = new PrintWriter(socket.getOutputStream(), true);
       in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
       hote = socket.getInetAddress();
       port = socket.getPort();
+      this.fileExport = fileExport;
     }
 
     public void run() {
@@ -81,12 +86,16 @@ class EchoServer {
         do {
           /* Faire echo et logguer */
           tampon = in.readLine();
+          responseTime =  System.nanoTime();
           if (tampon != null) {
             compteur++;
             /* log */
-            System.err.println("[" + hote + ":" + port + "]: " + compteur + ":" + tampon);
+            //System.err.println("[" + hote + ":" + port + "]: " + compteur + ":" + tampon);
             /* echo vers le client */
             out.println("> " + tampon);
+
+            responseTime = System.nanoTime() - responseTime;
+            fileExport.write(responseTime, tampon.charAt(tampon.length()-1));
           } else {
             break;
           }
@@ -98,10 +107,48 @@ class EchoServer {
         out.close();
         socket.close();
 
-        System.err.println("[" + hote + ":" + port + "]: Terminé...");
+       // System.err.println("[" + hote + ":" + port + "]: Terminé...");
       } catch (Exception e) {
         e.printStackTrace();
       }
     }
+  }
+
+  class FileExport {
+
+    File file;
+
+    FileExport() {
+      try {
+        file = new File("serverResponseTime.csv");
+        file.createNewFile();
+      } catch (IOException e) {
+        System.out.println("Error : Unable to create serverResponseTime.csv");
+        e.printStackTrace();
+      }
+    }
+
+    void write(long time, char n) {
+      try {
+        FileWriter writer = new FileWriter(file, true);
+        System.out.println("n = " + n + " time = " + time);
+        String string;
+        StringBuilder stringBuilder = new StringBuilder();
+        stringBuilder.append(n);
+        stringBuilder.append(';');
+        stringBuilder.append(time);
+        stringBuilder.append('\n');
+        string = stringBuilder.toString();
+        writer.write(string);
+
+        System.out.print(string);
+        writer.close();
+      } catch (IOException e) {
+        e.printStackTrace();
+      }
+
+
+    }
+
   }
 }

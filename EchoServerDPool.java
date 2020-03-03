@@ -130,6 +130,7 @@ class EchoServerDPool {
     FileExport() {
       try {
         file = new File("serverResponseTime.csv");
+        file.delete();
         file.createNewFile();
       } catch (IOException e) {
         e.printStackTrace();

@@ -117,6 +117,7 @@ class EchoServer {
     FileExport() {
       try {
         file = new File("serverResponseTime.csv");
+        file.delete();
         file.createNewFile();
       } catch (IOException e) {
         e.printStackTrace();
@@ -129,8 +130,6 @@ class EchoServer {
 
         String string;
         StringBuilder stringBuilder = new StringBuilder();
-        stringBuilder.append(n);
-        stringBuilder.append(';');
         stringBuilder.append(time);
         stringBuilder.append('\n');
         string = stringBuilder.toString();
